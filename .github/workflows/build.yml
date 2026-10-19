@@ -1,0 +1,50 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image
+        run: ./mutable image
+
+      - name: Clone the eurorack code
+        run: ./mutable clone
+
+      - name: Build every module and bootloader
+        run: |
+          failed=0
+          cd eurorack-modules
+          for mf in */makefile */bootloader/makefile; do
+            if ../mutable make -f "$mf" > build.log 2>&1; then
+              echo "ok   $mf"
+            else
+              echo "FAIL $mf"; tail -20 build.log; failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Build the update files
+        run: |
+          failed=0
+          cd eurorack-modules
+          for mf in */makefile; do
+            target=$(sed -n 's/^\(wav\|syx\) *:.*/\1/p' "$mf" | head -1)
+            [ -n "$target" ] || continue
+            if ../mutable make -f "$mf" "$target" > build.log 2>&1; then
+              echo "ok   $mf $target"
+            else
+              echo "FAIL $mf $target"; tail -20 build.log; failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Reproduce Mutable Instruments' releases
+        run: ./mutable check-releases

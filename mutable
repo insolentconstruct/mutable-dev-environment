@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Docker front end for the Mutable Instruments development environment.
+# Run ./mutable help for usage.
+set -euo pipefail
+
+here=$(cd "$(dirname "$0")" && pwd)
+image=${MUTABLE_IMAGE:-mutable-dev}
+mi_repo=https://github.com/pichenettes/eurorack.git
+# Mutable Instruments' code with the build scripts ported to Python 3.
+code_repo=https://github.com/insolentconstruct/eurorack.git
+code_branch=python3
+
+usage() {
+  cat <<'EOF'
+Usage: ./mutable [-C DIR] [--usb] COMMAND [ARGS...]
+
+  image             Build the Docker image (tag: $MUTABLE_IMAGE, default mutable-dev).
+  clone [URL [BRANCH]]
+                    Clone the eurorack code with its submodules into ./eurorack-modules.
+                    Default: the python3 branch of insolentconstruct/eurorack, which is
+                    Mutable Instruments' code with its build scripts ported to Python 3.
+                    Mutable Instruments' repository is added as the remote "pichenettes".
+  make ARGS...      Run make in the code directory, e.g. ./mutable make -f clouds/makefile wav
+  shell             Open a shell in the code directory.
+  check-releases    Rebuild Mutable Instruments' released firmware and compare it with the
+                    published update files (see tools/check_releases.py --help).
+
+  -C DIR            Code directory (default: $MUTABLE_SRC, else ./eurorack-modules if present,
+                    else the current directory).
+  --usb             Pass the host's USB devices through, for `make upload` (Linux only).
+EOF
+}
+
+src=${MUTABLE_SRC:-}
+usb=()
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -C) src=$2; shift 2 ;;
+    --usb)
+      # Keep the host's groups (plugdev, dialout) so the programmer is accessible.
+      usb=(--device /dev/bus/usb)
+      for g in $(id -G); do usb+=(--group-add "$g"); done
+      shift ;;
+    -h|--help|help) usage; exit 0 ;;
+    *) break ;;
+  esac
+done
+[[ $# -gt 0 ]] || { usage >&2; exit 2; }
+cmd=$1; shift
+
+if [[ -z $src ]]; then
+  if [[ -d $here/eurorack-modules ]]; then src=$here/eurorack-modules; else src=$PWD; fi
+fi
+
+run() {
+  local tty=()
+  [[ -t 0 && -t 1 ]] && tty=(-it)
+  src=$(cd "$src" && pwd)
+  docker run --rm "${tty[@]}" "${usb[@]}" --platform linux/amd64 \
+    --user "$(id -u):$(id -g)" --mount "type=bind,src=$src,dst=/src" -w /src "$image" "$@"
+}
+
+case $cmd in
+  image) docker build --platform linux/amd64 -t "$image" "$here" ;;
+  clone)
+    dest=$here/eurorack-modules
+    [[ ! -e $dest ]] || { echo "$dest already exists" >&2; exit 1; }
+    url=${1:-$code_repo}
+    branch=${2:-}
+    [[ -n $branch || -n ${1:-} ]] || branch=$code_branch
+    git clone --recurse-submodules ${branch:+-b "$branch"} "$url" "$dest"
+    [[ $url == "$mi_repo" ]] || git -C "$dest" remote add pichenettes "$mi_repo" ;;
+  make) run make "$@" ;;
+  shell) run bash ;;
+  check-releases) python3 "$here/tools/check_releases.py" --repo "$src" --image "$image" "$@" ;;
+  *) usage >&2; exit 2 ;;
+esac

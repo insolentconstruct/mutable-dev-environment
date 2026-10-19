@@ -1,13 +1,59 @@
-# Vagrant environment for Mutable Instruments modules hacking
+# Development environment for Mutable Instruments modules
+
+**TL;DR:** `./mutable image`, `./mutable clone`, then `./mutable make -f clouds/makefile wav`. Docker replaces the Vagrant VM: one pinned image with the same toolchains, Python 3 only.
+
+## Docker
+
+Requirements: [Docker](https://docs.docker.com/get-docker/) and git; `check-releases` also needs Python 3 on the host. The image is `linux/amd64`; on Apple silicon Docker runs it under emulation.
+
+    ./mutable image                         # build the image (about 2 GB)
+    ./mutable clone                         # get the code into ./eurorack-modules
+    ./mutable make -f clouds/bootloader/makefile hex
+    ./mutable make -f clouds/makefile wav   # build/clouds/clouds.wav
+    ./mutable shell                         # a shell in the code directory
+
+The image holds:
+- GCC 4.8-2013q4 at `/usr/local/arm-4.8.3` (and `/usr/local/arm`), the default of most makefiles;
+- GCC 4.9-2015q2 at `/usr/local/arm-4.9`, for Beads;
+- avr-gcc 5.4 at `/usr/local/CrossPack-AVR`;
+- OpenOCD and stlink;
+- Python 3 with numpy, scipy and matplotlib.
+
+Every download in the image is pinned by sha256, and Debian packages come from a dated snapshot.
+
+`./mutable clone` checks out the `python3` branch of [insolentconstruct/eurorack](https://github.com/insolentconstruct/eurorack/tree/python3). That branch is Mutable Instruments' code with the build scripts (resource generators, audio and SysEx encoders) ported to Python 3:
+- Every module, application and bootloader builds to the same binary as before.
+- Every update file is byte-identical to the Python 2 tools' output.
+- The submodules point at Python 3 branches of the same forks.
+- Mutable Instruments' repository is added as the remote `pichenettes`.
+- To build another repository or branch: `./mutable clone URL [BRANCH]`.
+
+Make regenerates `resources.cc` when a `resources/*.py` file looks newer, which a fresh clone can trigger. Newer stmlib writes `* const` tables, so regenerated files can differ from the committed ones without changing the sound.
+
+Uploading over JTAG/SWD needs the USB device in the container, so it works on Linux only:
+
+    ./mutable --usb make -f clouds/makefile upload
+
+`PGM_INTERFACE` and the other makefile settings below work as before, e.g. `./mutable make -f braids/makefile PGM_INTERFACE=stlink-v2 upload`.
+
+`./mutable check-releases` rebuilds eight released firmwares at their release commits:
+- Braids 1.8, Clouds 1.31, Elements 1.1, Marbles 1.3, Peaks 1.1, Stages 1.2, Tides 1.1 and Tides 2 1.2;
+- each one's published update file is decoded and must match the build byte for byte;
+- CI runs this check, plus a build of every module and update file.
+
+## Legacy: Vagrant
+
+The original Vagrant setup below still works, but it is no longer maintained.
+
 
 This configuration file and this shellscript create a Linux (ubuntu) virtual machine configured with all the right tools for compiling and installing the firmware of Mutable Instruments' modules.
 
-## Kudos and inspiration
+### Kudos and inspiration
 
 * Adafruit's [ARM Toolchain for Vagrant](https://github.com/adafruit/ARM-toolchain-vagrant)
 * Novation's [LaunchPad pro](https://github.com/dvhdr/launchpad-pro)
 
-## Requirements
+### Requirements
 
 * [VirtualBox 5.x](https://www.virtualbox.org/wiki/Downloads)
 * [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads)
@@ -23,7 +69,7 @@ Finally if you are running a Linux operating system you will want to add your us
 
 Then **log out and log back in** to make sure the group change takes effect.
 
-## Usage
+### Usage
 
 First, clone this repository:
 
@@ -66,17 +112,17 @@ Once you're done with your hacking session, you can leave the VM terminal with:
 
 The virtual machine continues running and can be reaccessed with `vagrant ssh`. It can also be suspended with `vagrant suspend`, halted with `vagrant halt`, and completely destroyed with `vagrant destroy`.  Note that with this last command, you might lose any files you have created inside the VM's disk image!
 
-## Moving files between the VM and the host
+### Moving files between the VM and the host
 
 By default, the working directory (`eurorack-modules`) is installed in the `/vagrant` directory, which is shared between the VM and the host.  You can thus use any text editor on the host to modify the files.  Note that any file can be transferred between the VM and the host by being copied in this location.
 
 If you prefer working in a more self-contained environment and leave your host directory clean, you can comment the line `CODE_DIRECTORY=/vagrant` and uncomment the line `CODE_DIRECTORY=/home/vagrant` before setting up the VM.  The code will not be installed in the shared directory, and will be accessible only from within the VM.
 
-## USB issues
+### USB issues
 
 To pass through USB devices from your real machine to the virtual machine, consult the [VirtualBox USB documentation](https://www.virtualbox.org/manual/ch03.html#idp96037808).
 
-## <a name=#customization></a>Customization
+### <a name=#customization></a>Customization
 
 ### Using a different programmer
 To use a programmer other than the default (AVR ISP mkII, ARM-USB-OCD-H) it is no longer necessary to edit the makefiles. Instead, the programmer can be set in the shell for the current session, e.g.
