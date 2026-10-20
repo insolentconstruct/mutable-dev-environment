@@ -61,7 +61,7 @@ To compare ARM GCC releases, `./mutable compilers` builds one image per release 
     ./mutable render --sanitize plaits    # sanitizers and uninitialised-local check
     ./mutable render --update peaks       # rewrite peaks/test/render.sha256
 
-A changed hash means the DSP output changed. These are x86 renders; they don't establish what the ARM firmware computes. `--sanitize` fails on vanilla Marbles, Peaks and Plaits until their bugs are fixed.
+Run it on a clean checkout: make can regenerate `resources.cc`, and Warps' regenerated filter-bank table renders differently. A changed hash means the DSP output changed. These are x86 renders; they don't establish what the ARM firmware computes. `--sanitize` fails on vanilla Marbles, Peaks and Plaits until their bugs are fixed.
 
 ## Legacy: Vagrant
 

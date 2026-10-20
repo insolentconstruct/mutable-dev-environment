@@ -18,6 +18,10 @@ jobs:
       - name: Clone the eurorack code
         run: ./mutable clone
 
+      # Before the builds, which can regenerate resources.cc.
+      - name: Host render tests
+        run: ./mutable render
+
       - name: Build every module and bootloader
         run: |
           failed=0
@@ -45,9 +49,6 @@ jobs:
             fi
           done
           exit $failed
-
-      - name: Host render tests
-        run: ./mutable render
 
       - name: Reproduce Mutable Instruments' releases
         run: ./mutable check-releases
