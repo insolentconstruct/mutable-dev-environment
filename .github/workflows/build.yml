@@ -46,6 +46,9 @@ jobs:
           done
           exit $failed
 
+      - name: Host render tests
+        run: ./mutable render
+
       - name: Reproduce Mutable Instruments' releases
         run: ./mutable check-releases
 

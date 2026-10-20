@@ -29,6 +29,8 @@ Usage: ./mutable [-C DIR] [--usb] COMMAND [ARGS...]
                     ($MUTABLE_IMAGE:gcc-RELEASE).
   matrix [ARGS...]  Build every module with every compiler image and print flash use
                     (see tools/compiler_matrix.py run --help).
+  render [ARGS...]  Run the desktop render tests and check their output hashes
+                    (see test/host_render.py --help in the code directory).
 
   -C DIR            Code directory (default: $MUTABLE_SRC, else ./eurorack-modules if present,
                     else the current directory).
@@ -80,5 +82,6 @@ case $cmd in
   check-releases) python3 "$here/tools/check_releases.py" --repo "$src" --image "$image" "$@" ;;
   compilers) python3 "$here/tools/compiler_matrix.py" images --base "$image" "$@" ;;
   matrix) python3 "$here/tools/compiler_matrix.py" run --repo "$src" --base "$image" "$@" ;;
+  render) run python3 test/host_render.py "$@" ;;
   *) usage >&2; exit 2 ;;
 esac

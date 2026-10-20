@@ -17,6 +17,7 @@ The image holds:
 - GCC 4.9-2015q2 at `/usr/local/arm-4.9`, for Beads;
 - avr-gcc 5.4 at `/usr/local/CrossPack-AVR`;
 - OpenOCD and stlink;
+- the host g++ (Debian 14.2), for the desktop tests;
 - Python 3 with numpy, scipy and matplotlib.
 
 Every download in the image is pinned by sha256, and Debian packages come from a dated snapshot.
@@ -50,6 +51,17 @@ To compare ARM GCC releases, `./mutable compilers` builds one image per release 
     ./mutable matrix --no-werror plaits rings    # measure builds that new warnings stop
 
 `matrix` builds each module's application from the commit you name (`--commit`, default `HEAD`), without network, and prints its flash use (text + data) and the bytes left in the application region. The firmware flags are unchanged. `--no-werror` only appends `-Wno-error`, for measurement. `--context` takes a Docker context and can be repeated to spread the compilers across machines.
+
+### Render tests
+
+`./mutable render` builds each module's desktop test harness (`<module>/test/`) with fixed host flags, runs it and checks the SHA-256 of every file it writes against `<module>/test/render.sha256`. The modules are Braids, Marbles, Peaks, Plaits, Rings, Stages, Tides 2 and Warps; they render in parallel.
+
+    ./mutable render                      # every module
+    ./mutable render peaks rings          # some modules
+    ./mutable render --sanitize plaits    # sanitizers and uninitialised-local check
+    ./mutable render --update peaks       # rewrite peaks/test/render.sha256
+
+A changed hash means the DSP output changed. These are x86 renders; they don't establish what the ARM firmware computes. `--sanitize` fails on vanilla Marbles, Peaks and Plaits until their bugs are fixed.
 
 ## Legacy: Vagrant
 
