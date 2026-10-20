@@ -41,6 +41,16 @@ Uploading over JTAG/SWD needs the USB device in the container, so it works on Li
 - each one's published update file is decoded and must match the build byte for byte;
 - CI runs this check, plus a build of every module and update file.
 
+### Compiler matrix
+
+To compare ARM GCC releases, `./mutable compilers` builds one image per release in [compilers/compilers.tsv](compilers/compilers.tsv) (`mutable-dev:gcc-<release>`, 0.3 to 4 GB each on top of the base). That file lists the two pinned compilers and the newest Arm release of each major from 4.9 to 15. GCC 16 is built from the GNU sources, because Arm hasn't published it yet.
+
+    ./mutable compilers --compiler 14.3.Rel1     # one image; no --compiler builds all
+    ./mutable matrix --csv sizes.csv             # every STM32 module with every compiler
+    ./mutable matrix --no-werror plaits rings    # measure builds that new warnings stop
+
+`matrix` builds each module's application from the commit you name (`--commit`, default `HEAD`), without network, and prints its flash use (text + data) and the bytes left in the application region. The firmware flags are unchanged. `--no-werror` only appends `-Wno-error`, for measurement. `--context` takes a Docker context and can be repeated to spread the compilers across machines.
+
 ## Legacy: Vagrant
 
 The original Vagrant setup below still works, but it is no longer maintained.

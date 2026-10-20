@@ -48,3 +48,10 @@ jobs:
 
       - name: Reproduce Mutable Instruments' releases
         run: ./mutable check-releases
+
+      - name: Compiler matrix smoke test
+        run: |
+          ./mutable compilers --compiler 14.3.Rel1
+          ./mutable matrix --compiler 14.3.Rel1 --no-werror --csv matrix.csv peaks plaits
+          grep -q '^14.3.Rel1,peaks,ok,' matrix.csv
+          grep -q '^14.3.Rel1,plaits,ok,' matrix.csv

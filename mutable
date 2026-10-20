@@ -24,6 +24,11 @@ Usage: ./mutable [-C DIR] [--usb] COMMAND [ARGS...]
   shell             Open a shell in the code directory.
   check-releases    Rebuild Mutable Instruments' released firmware and compare it with the
                     published update files (see tools/check_releases.py --help).
+  compilers [--compiler RELEASE]...
+                    Build one image per ARM GCC in compilers/compilers.tsv
+                    ($MUTABLE_IMAGE:gcc-RELEASE).
+  matrix [ARGS...]  Build every module with every compiler image and print flash use
+                    (see tools/compiler_matrix.py run --help).
 
   -C DIR            Code directory (default: $MUTABLE_SRC, else ./eurorack-modules if present,
                     else the current directory).
@@ -73,5 +78,7 @@ case $cmd in
   make) run make "$@" ;;
   shell) run bash ;;
   check-releases) python3 "$here/tools/check_releases.py" --repo "$src" --image "$image" "$@" ;;
+  compilers) python3 "$here/tools/compiler_matrix.py" images --base "$image" "$@" ;;
+  matrix) python3 "$here/tools/compiler_matrix.py" run --repo "$src" --base "$image" "$@" ;;
   *) usage >&2; exit 2 ;;
 esac

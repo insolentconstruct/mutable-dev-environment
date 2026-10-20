@@ -1,0 +1,19 @@
+# ARM GCC releases for tools/compiler_matrix.py: the newest packaged release of
+# each major, plus the two the makefiles pin. linux x86_64 archives.
+# release      source                                          sha256
+4.8-2013-q4    path:/usr/local/arm-4.8.3                       -
+4.9-2015-q2    path:/usr/local/arm-4.9                         -
+4.9-2015-q3    https://launchpadlibrarian.net/218827486/gcc-arm-none-eabi-4_9-2015q3-20150921-linux.tar.bz2    c50078bfbd29e6c15615900e746f4d0acde917338e55860b0f145f57387c12ab
+5-2016-q3      https://launchpadlibrarian.net/287101520/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2    a397c49bdd0cf17a38a494cb691baf68b8dcffa4d4c06561ef3d71b2ab4c92a1
+6-2017-q2      https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2    e68e4b2fe348ecb567c27985355dff75b65319a0f6595d44a18a8c5e05887cc3
+7-2018-q2      https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2    bb17109f0ee697254a5d4ae6e5e01440e3ea8f0277f2e8169bf95d07c7d5fe69
+8-2019-q3      https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/8-2019q3/RC1.1/gcc-arm-none-eabi-8-2019-q3-update-linux.tar.bz2    b50b02b0a16e5aad8620e9d7c31110ef285c1dde28980b1a9448b764d77d8f92
+9-2020-q2      https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2    5adc2ee03904571c2de79d5cfc0f7fe2a5c5f54f44da5b645c17ee57b217f11f
+10.3-2021.10   https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2    97dbb4f019ad1650b732faffcc881689cedc14e2b7ee863d390e0a41ef16c9a3
+11.3.Rel1      https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/11.3.rel1/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi.tar.xz    d420d87f68615d9163b99bbb62fe69e85132dc0a8cd69fca04e813597fe06121
+12.3.Rel1      https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/12.3.rel1/binrel/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi.tar.xz    12a2815644318ebcceaf84beabb665d0924b6e79e21048452c5331a56332b309
+13.3.Rel1      https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/13.3.rel1/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz    95c011cee430e64dd6087c75c800f04b9c49832cc1000127a92a97f9c8d83af4
+14.3.Rel1      https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz    8f6903f8ceb084d9227b9ef991490413014d991874a1e34074443c2a72b14dbd
+15.3.Rel2      https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/15.3.rel2/arm-gnu-toolchain-15.3.rel2-x86_64-arm-none-eabi.tar.xz    463df9665c246fa13bab2102115bbf83440661b6eb70b44f3dfd4712ca30037a
+# No GCC 16 toolchain from Arm yet: built from GNU sources.
+16.2.0         file:gcc16.Dockerfile                           -

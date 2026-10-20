@@ -16,7 +16,7 @@ RUN rm -f /etc/apt/sources.list.d/debian.sources \
  && dpkg --add-architecture i386 \
  && apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Retries=5 update \
  && apt-get install -y --no-install-recommends \
-        ca-certificates curl bzip2 git make gawk \
+        ca-certificates curl bzip2 xz-utils git make gawk \
         libc6:i386 libstdc++6:i386 zlib1g:i386 gdb-multiarch \
         python3 python3-numpy python3-scipy python3-matplotlib python-is-python3 python3-serial \
         gcc-avr/bookworm binutils-avr/bookworm avr-libc/bookworm avrdude \
