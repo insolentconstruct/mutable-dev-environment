@@ -33,15 +33,21 @@ RUN MPLBACKEND=Agg python -c 'import scipy.signal, scipy.stats, pylab' \
 
 # ARM toolchains at the paths the makefiles expect: 4.8 for most modules
 # (stmlib's default /usr/local/arm/ is a link to it), 4.9 for Beads.
+# GCC48_LOCAL / GCC49_LOCAL: an archive in the build context to use instead of the URL.
 ARG GCC48_URL=https://launchpadlibrarian.net/160488069/gcc-arm-none-eabi-4_8-2013q4-20131204-linux.tar.bz2
 ARG GCC48_SHA256=fd090320ab9d4b6cf8cdf29bf5b046db816da9e6738eb282b9cf2321ecf6356a
+ARG GCC48_LOCAL=
 ARG GCC49_URL=https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q2-update/+download/gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2
 ARG GCC49_SHA256=3a574c5becfca496bafe07bbd76e9deae1fd0cc99c5a9de0f8c610750f2f89ac
-RUN set -e; \
-    fetch() { curl -fsSL --retry 5 -o /tmp/tc.tar.bz2 "$1"; echo "$2  /tmp/tc.tar.bz2" | sha256sum -c -; \
+ARG GCC49_LOCAL=
+RUN --mount=type=bind,source=${GCC48_LOCAL:-Dockerfile},target=/tmp/gcc48.local \
+    --mount=type=bind,source=${GCC49_LOCAL:-Dockerfile},target=/tmp/gcc49.local \
+    set -e; \
+    fetch() { if [ -n "$4" ]; then cp "$4" /tmp/tc.tar.bz2; else curl -fsSL --retry 5 -o /tmp/tc.tar.bz2 "$1"; fi; \
+              echo "$2  /tmp/tc.tar.bz2" | sha256sum -c -; \
               mkdir -p "$3"; tar -xjf /tmp/tc.tar.bz2 -C "$3" --strip-components=1; rm -f /tmp/tc.tar.bz2; }; \
-    fetch "$GCC48_URL" "$GCC48_SHA256" /usr/local/arm-4.8.3; \
-    fetch "$GCC49_URL" "$GCC49_SHA256" /usr/local/arm-4.9; \
+    fetch "$GCC48_URL" "$GCC48_SHA256" /usr/local/arm-4.8.3 "${GCC48_LOCAL:+/tmp/gcc48.local}"; \
+    fetch "$GCC49_URL" "$GCC49_SHA256" /usr/local/arm-4.9 "${GCC49_LOCAL:+/tmp/gcc49.local}"; \
     ln -s /usr/local/arm-4.8.3 /usr/local/arm; \
     /usr/local/arm/bin/arm-none-eabi-gcc --version | sed -n 1p; \
     /usr/local/arm-4.9/bin/arm-none-eabi-gcc --version | sed -n 1p; \

@@ -22,6 +22,8 @@ The image holds:
 
 Every download in the image is pinned by sha256, and Debian packages come from a dated snapshot.
 
+To build without Launchpad, put the two GCC archives in `.toolchains/` (ignored by git) and name them: `./mutable image --build-arg GCC48_LOCAL=.toolchains/gcc48.tar.bz2 --build-arg GCC49_LOCAL=.toolchains/gcc49.tar.bz2`. They are checked against the same sha256.
+
 `./mutable clone` checks out the `python3` branch of [insolentconstruct/eurorack](https://github.com/insolentconstruct/eurorack/tree/python3). That branch is Mutable Instruments' code with the build scripts (resource generators, audio and SysEx encoders) ported to Python 3:
 - Every module, application and bootloader builds to the same binary as before.
 - Every update file is byte-identical to the Python 2 tools' output.

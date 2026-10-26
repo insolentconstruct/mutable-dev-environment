@@ -14,7 +14,10 @@ usage() {
   cat <<'EOF'
 Usage: ./mutable [-C DIR] [--usb] COMMAND [ARGS...]
 
-  image             Build the Docker image (tag: $MUTABLE_IMAGE, default mutable-dev).
+  image [DOCKER-BUILD-ARGS...]
+                    Build the Docker image (tag: $MUTABLE_IMAGE, default mutable-dev).
+                    --build-arg GCC48_LOCAL=FILE or GCC49_LOCAL=FILE uses a toolchain
+                    archive in this directory instead of downloading it.
   clone [URL [BRANCH]]
                     Clone the eurorack code with its submodules into ./eurorack-modules.
                     Default: the python3 branch of insolentconstruct/eurorack, which is
@@ -68,7 +71,7 @@ run() {
 }
 
 case $cmd in
-  image) docker build --platform linux/amd64 -t "$image" "$here" ;;
+  image) docker build --platform linux/amd64 -t "$image" "$@" "$here" ;;
   clone)
     dest=$here/eurorack-modules
     [[ ! -e $dest ]] || { echo "$dest already exists" >&2; exit 1; }

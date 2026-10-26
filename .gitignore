@@ -1,4 +1,5 @@
 .vagrant/
+.toolchains/
 eurorack-modules/
 .DS_Store
 __pycache__/
