@@ -41,7 +41,7 @@ Uploading over JTAG/SWD needs the USB device in the container, so it works on Li
 
 `./mutable check-releases` rebuilds eight released firmwares at their release commits:
 - Braids 1.8, Clouds 1.31, Elements 1.1, Marbles 1.3, Peaks 1.1, Stages 1.2, Tides 1.1 and Tides 2 1.2;
-- each one's published update file is decoded and must match the build byte for byte;
+- each one's published update file is decoded and must match the build byte for byte, and the built .hex must hold the same bytes as the .bin;
 - CI runs this check, plus a build of every module and update file.
 
 ### Compiler matrix
