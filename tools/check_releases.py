@@ -29,9 +29,10 @@ with the published update files, byte for byte.
 
 For each release below: export the eurorack tree at the release commit (with
 the stmlib and stm_audio_bootloader submodules at their recorded commits), run
-`make -f <module>/makefile bin` in a fresh container with no network, decode
+`make -f <module>/makefile bin hex` in a fresh container with no network, decode
 the published .wav with tools/wav2bin.py using the encoder settings from that
-commit's makefile, and require the decoded image to equal the build.
+commit's makefile, and require the decoded image to equal the build. The .hex
+that programmers flash must hold the same bytes as the .bin.
 """
 import argparse
 import hashlib
@@ -128,6 +129,36 @@ def release_file(rel_path, sha, docs):
   return data
 
 
+def load_hex(f):
+  """Intel HEX to (lowest address, bytes); gaps are filled with zeros, as
+  objcopy -O binary fills them."""
+  upper = 0
+  chunks = {}
+  for line in f:
+    line = line.strip()
+    if not line:
+      continue
+    record = bytes.fromhex(line[1:])
+    count, address, kind = record[0], (record[1] << 8) | record[2], record[3]
+    if line[0] != ':' or len(record) != count + 5 or sum(record) & 0xff:
+      raise ValueError('bad .hex record: ' + line)
+    payload = record[4:4 + count]
+    if kind == 0:
+      chunks[upper + address] = payload
+    elif kind == 1:
+      break
+    elif kind == 4:
+      upper = ((payload[0] << 8) | payload[1]) << 16
+    elif kind != 5:  # 05 is the entry point.
+      raise ValueError('unexpected .hex record type %d' % kind)
+  base = min(chunks)
+  end = max(a + len(d) for a, d in chunks.items())
+  image = bytearray(end - base)
+  for a, d in chunks.items():
+    image[a - base:a - base + len(d)] = d
+  return base, bytes(image)
+
+
 def docker(context, *args, **kw):
   base = ['docker'] + (['--context', context] if context else [])
   return subprocess.run(base + list(args), **kw)
@@ -141,7 +172,7 @@ def check(release, repo, docs, image, context):
   # are built from the files Mutable Instruments shipped, and need no Python.
   script = ('set -e; mkdir -p /tmp/src; cd /tmp/src; tar -xf /tmp/src.tar; '
             'find . -name "resources.cc" -o -name "resources.h" | xargs -r touch; '
-            'make -f {m}/makefile bin > /tmp/build.log 2>&1 || {{ tail -30 /tmp/build.log; exit 1; }}; '
+            'make -f {m}/makefile bin hex > /tmp/build.log 2>&1 || {{ tail -30 /tmp/build.log; exit 1; }}; '
             'python3 /tmp/wav2bin.py /tmp/release.wav {flags} --expect build/{t}/{t}.bin'
             ).format(m=module, t=target, flags=' '.join(map(shlex.quote, flags)))
   cid = docker(context, 'create', '--platform', 'linux/amd64', '--network', 'none', image,
@@ -154,9 +185,21 @@ def check(release, repo, docs, image, context):
         docker(context, 'cp', os.path.join(tmp, name), '%s:/tmp/%s' % (cid, name), check=True)
     docker(context, 'cp', os.path.join(HERE, 'wav2bin.py'), cid + ':/tmp/wav2bin.py', check=True)
     r = docker(context, 'start', '-a', cid, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    lines = r.stdout.strip().splitlines()
+    if r.returncode != 0:
+      return False, lines
+    with tempfile.TemporaryDirectory() as tmp:
+      for ext in ('bin', 'hex'):
+        docker(context, 'cp', '%s:/tmp/src/build/%s/%s.%s' % (cid, target, target, ext), tmp, check=True)
+      with open(os.path.join(tmp, target + '.bin'), 'rb') as f:
+        image = f.read()
+      with open(os.path.join(tmp, target + '.hex')) as f:
+        base, data = load_hex(f)
   finally:
     docker(context, 'rm', '-f', cid, stdout=subprocess.DEVNULL)
-  return r.returncode == 0, r.stdout.strip().splitlines()
+  if data != image:
+    return False, lines + ['.hex at 0x%08x does not match the .bin' % base]
+  return True, lines[:-1] + [lines[-1] + '; .hex at 0x%08x matches' % base] if lines else lines
 
 
 def main():
